@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-1: #1a2f4e;
+  --bg-2: #1e3a5f;
+  --bg-3: #162844;
+  --surface: rgba(255,255,255,0.07);
+  --surface-solid: #1d3354;
+  --surface-hover: rgba(255,255,255,0.11);
+  --surface-card: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.22);
+  --text: #eef2f8;
+  --text-muted: #8fa8c8;
+  --text-dim: #5a7a9e;
+  --accent: #7eb8f7;
+  --accent-dark: #4a90d9;
+  --accent-glow: rgba(126,184,247,0.18);
+  --success: #6fcf97;
+  --danger: #eb5757;
+  --warning: #f2994a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  min-height: 100dvh;
+  background: var(--bg-1);
+  background-attachment: fixed;
+  animation: bgShift 18s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0%   { background-color: #1a2f4e; }
+  33%  { background-color: #162844; }
+  66%  { background-color: #1f3a60; }
+  100% { background-color: #1a3055; }
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+::selection { background: var(--accent-glow); color: var(--text); }
