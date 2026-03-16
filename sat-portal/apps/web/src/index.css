@@ -3,21 +3,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-1: #1a2f4e;
-  --bg-2: #1e3a5f;
-  --bg-3: #162844;
-  --surface: rgba(255,255,255,0.07);
-  --surface-solid: #1d3354;
-  --surface-hover: rgba(255,255,255,0.11);
-  --surface-card: rgba(255,255,255,0.09);
-  --border: rgba(255,255,255,0.12);
-  --border-strong: rgba(255,255,255,0.22);
-  --text: #eef2f8;
-  --text-muted: #8fa8c8;
-  --text-dim: #5a7a9e;
-  --accent: #7eb8f7;
-  --accent-dark: #4a90d9;
-  --accent-glow: rgba(126,184,247,0.18);
+  --bg-1: #2a5298;
+  --bg-2: #3a6bc4;
+  --bg-3: #1e4080;
+  --surface: rgba(255,255,255,0.10);
+  --surface-solid: #2d5aaa;
+  --surface-hover: rgba(255,255,255,0.16);
+  --surface-card: rgba(255,255,255,0.13);
+  --border: rgba(255,255,255,0.18);
+  --border-strong: rgba(255,255,255,0.30);
+  --text: #f0f4ff;
+  --text-muted: #a8c4f0;
+  --text-dim: #7499cc;
+  --accent: #a8d4ff;
+  --accent-dark: #5b9ef5;
+  --accent-glow: rgba(168,212,255,0.20);
   --success: #6fcf97;
   --danger: #eb5757;
   --warning: #f2994a;
@@ -40,10 +40,10 @@ body {
 }
 
 @keyframes bgShift {
-  0%   { background-color: #1a2f4e; }
-  33%  { background-color: #162844; }
-  66%  { background-color: #1f3a60; }
-  100% { background-color: #1a3055; }
+  0%   { background-color: #2a5298; }
+  33%  { background-color: #1e4080; }
+  66%  { background-color: #3a6bc4; }
+  100% { background-color: #2d5cb8; }
 }
 
 a { color: var(--accent); text-decoration: none; }

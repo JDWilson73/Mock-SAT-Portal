@@ -4,43 +4,71 @@ import { api } from "../lib/api";
 import type { Question } from "@sat-portal/shared";
 import "./test.css";
 
+type Phase = "reading_writing" | "interstitial" | "math" | "submitting";
 interface Answer { questionId: string; choiceId: string | null; }
+
+const SECTION_TIME = 1920; // 32 min per section
 
 export default function TestPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [rwQuestions, setRwQuestions] = useState<Question[]>([]);
+  const [mathQuestions, setMathQuestions] = useState<Question[]>([]);
+  const [phase, setPhase] = useState<Phase>("reading_writing");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(SECTION_TIME);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Derived
+  const isInterstitial = phase === "interstitial";
+  const questions = phase === "math" ? mathQuestions : rwQuestions;
+  const q = questions[current];
+
   useEffect(() => {
-    api.getQuestions({ limit: 20 })
-      .then(qs => {
-        setQuestions(qs);
-        setTimeLeft(qs.length * 96); // ~96s per question
-        setLoading(false);
-      })
-      .catch(console.error);
+    Promise.all([
+      api.getQuestions({ section: "reading_writing", limit: 10 }),
+      api.getQuestions({ section: "math", limit: 10 }),
+    ]).then(([rw, math]) => {
+      setRwQuestions(rw);
+      setMathQuestions(math);
+      setLoading(false);
+    }).catch(console.error);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
+  // Timer — resets between sections
   useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0) return;
+    if (loading || isInterstitial || phase === "submitting") return;
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setTimeLeft(t => {
-        if (t === null || t <= 1) { clearInterval(timerRef.current!); handleSubmit(); return 0; }
+        if (t <= 1) {
+          clearInterval(timerRef.current!);
+          if (phase === "reading_writing") advanceToInterstitial();
+          else handleSubmit();
+          return 0;
+        }
         return t - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [timeLeft !== null && timeLeft > 0 ? "running" : "stopped"]);
+  }, [phase, loading]);
+
+  function advanceToInterstitial() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setPhase("interstitial");
+  }
+
+  function beginMathSection() {
+    setCurrent(0);
+    setTimeLeft(SECTION_TIME);
+    setPhase("math");
+  }
 
   const goTo = useCallback((index: number) => {
     if (index === current) return;
@@ -61,9 +89,11 @@ export default function TestPage() {
   }
 
   async function handleSubmit() {
-    if (submitting || !sessionId) return;
-    setSubmitting(true);
-    const payload: Answer[] = questions.map(q => ({
+    if (!sessionId || phase === "submitting") return;
+    setPhase("submitting");
+    if (timerRef.current) clearInterval(timerRef.current);
+    const allQuestions = [...rwQuestions, ...mathQuestions];
+    const payload: Answer[] = allQuestions.map(q => ({
       questionId: q.id,
       choiceId: answers[q.id] ?? null,
     }));
@@ -72,42 +102,59 @@ export default function TestPage() {
       navigate(`/results/${sessionId}`);
     } catch (e) {
       console.error(e);
-      setSubmitting(false);
+      setPhase("math");
     }
   }
 
   if (loading) return <div className="test-loading">Loading test…</div>;
 
-  const q = questions[current];
-  const answered = Object.keys(answers).length;
+  // ── Interstitial ────────────────────────────────────────────────────────────
+  if (isInterstitial) {
+    const rwAnswered = rwQuestions.filter(q => answers[q.id] !== undefined).length;
+    return (
+      <div className="interstitial-shell">
+        <div className="interstitial-card">
+          <span className="interstitial-eyebrow">Section complete</span>
+          <h1 className="interstitial-title">Reading &amp; Writing</h1>
+          <p className="interstitial-stat">{rwAnswered} of {rwQuestions.length} answered</p>
+          <p className="interstitial-note">
+            You cannot return to this section. Take a moment, then begin Math when ready.
+          </p>
+          <div className="interstitial-divider" />
+          <h2 className="interstitial-next">Next: Math</h2>
+          <p className="interstitial-next-desc">32 minutes · {mathQuestions.length} questions</p>
+          <button className="btn-begin" onClick={beginMathSection}>Begin Math section →</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "submitting") return <div className="test-loading">Submitting your test…</div>;
+
+  const answered = Object.keys(answers).filter(id =>
+    questions.some(q => q.id === id)
+  ).length;
   const progress = answered / questions.length;
+  const sectionLabel = phase === "reading_writing" ? "Reading & Writing" : "Math";
 
   return (
     <div className="test-shell">
-      {/* Top bar */}
       <div className="test-topbar">
-        <div className="test-topbar-left">
-          <span className="test-section-label">{q.section === "math" ? "Math" : "Reading & Writing"}</span>
-        </div>
-        <div className="test-timer" style={{ color: timeLeft !== null && timeLeft < 300 ? "var(--danger)" : undefined }}>
-          {timeLeft !== null ? fmtTime(timeLeft) : "—"}
-        </div>
-        <button
-          className="btn-submit"
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? "Submitting…" : "Submit test"}
-        </button>
+        <span className="t-section">{sectionLabel}</span>
+        <span className="t-timer" style={{ color: timeLeft < 300 ? "var(--danger)" : undefined }}>
+          {fmtTime(timeLeft)}
+        </span>
+        {phase === "reading_writing"
+          ? <button className="btn-submit" onClick={advanceToInterstitial}>Finish section →</button>
+          : <button className="btn-submit" onClick={handleSubmit}>Submit test</button>
+        }
       </div>
 
-      {/* Progress bar */}
       <div className="progress-track">
         <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
       </div>
 
       <div className="test-body">
-        {/* Question breadcrumbs */}
         <div className="breadcrumb-strip">
           {questions.map((q, i) => (
             <button
@@ -119,32 +166,26 @@ export default function TestPage() {
                 flagged.has(q.id) ? "crumb-flagged" : "",
               ].join(" ")}
               onClick={() => goTo(i)}
-              title={`Question ${i + 1}`}
             >
               {i + 1}
             </button>
           ))}
         </div>
 
-        {/* Question card */}
         <div className={`question-card ${transitioning ? "question-exit" : "question-enter"}`}>
           <div className="question-meta">
             <span className="q-number">Question {current + 1} of {questions.length}</span>
             <button
               className={`flag-btn ${flagged.has(q.id) ? "flagged" : ""}`}
               onClick={() => toggleFlag(q.id)}
-              title="Flag for review"
             >
               {flagged.has(q.id) ? "⚑ Flagged" : "⚐ Flag"}
             </button>
           </div>
-
           <p className="question-difficulty">
-            {q.difficulty.charAt(0).toUpperCase() + q.difficulty.slice(1)}
+            {q.subtype.replace("_", " ")} · {q.difficulty}
           </p>
-
           <p className="question-prompt">{q.prompt}</p>
-
           <div className="choices">
             {q.choices.map(c => (
               <button
@@ -159,25 +200,10 @@ export default function TestPage() {
           </div>
         </div>
 
-        {/* Navigation */}
         <div className="test-nav">
-          <button
-            className="btn-nav"
-            onClick={() => goTo(current - 1)}
-            disabled={current === 0}
-          >
-            ← Previous
-          </button>
-          <span className="nav-progress-text">
-            {answered} of {questions.length} answered
-          </span>
-          <button
-            className="btn-nav"
-            onClick={() => goTo(current + 1)}
-            disabled={current === questions.length - 1}
-          >
-            Next →
-          </button>
+          <button className="btn-nav" onClick={() => goTo(current - 1)} disabled={current === 0}>← Previous</button>
+          <span className="nav-info">{answered} of {questions.length} answered</span>
+          <button className="btn-nav" onClick={() => goTo(current + 1)} disabled={current === questions.length - 1}>Next →</button>
         </div>
       </div>
     </div>

@@ -19,6 +19,7 @@ model User {
 model Question {
   id              String          @id @default(uuid())
   section         String
+  subtype         String
   difficulty      String
   prompt          String
   explanation     String?

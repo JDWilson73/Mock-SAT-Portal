@@ -1,9 +1,9 @@
 .results-shell {
   min-height: 100dvh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 4rem;
 }
 
 .results-loading {
@@ -17,7 +17,7 @@
 
 .results-card {
   width: 100%;
-  max-width: 500px;
+  max-width: 620px;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -44,32 +44,14 @@
   margin-bottom: 0.2rem;
 }
 
-.results-date {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-bottom: 1.8rem;
-}
+.results-date { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.8rem; }
 
-/* Score dial */
-.score-dial-wrap {
-  text-align: center;
-  margin-bottom: 1.8rem;
-}
-.score-dial {
-  width: 200px;
-  height: 120px;
-  overflow: visible;
-}
-.score-range {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  letter-spacing: 0.08em;
-  margin-top: 0.3rem;
-}
+/* Dial */
+.score-dial-wrap { text-align: center; margin-bottom: 1.8rem; }
+.score-dial { width: 200px; height: 120px; overflow: visible; }
 
 /* Breakdown */
-.breakdown-section { margin-bottom: 1.8rem; }
-
+.breakdown-section { margin-bottom: 2rem; }
 .breakdown-heading {
   font-family: var(--font-serif);
   font-size: 0.95rem;
@@ -79,54 +61,125 @@
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border);
 }
-
-.breakdown-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-}
-
-.breakdown-row-sub {
-  padding: 0.65rem 0;
-  border-top: 1px solid rgba(255,255,255,0.05);
-}
-
+.breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; }
 .breakdown-label { font-size: 0.88rem; color: var(--text-muted); }
-.breakdown-value {
-  font-family: var(--font-serif);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-}
+.breakdown-value { font-family: var(--font-serif); font-size: 1rem; font-weight: 600; }
+.breakdown-bar-wrap { display: flex; align-items: center; gap: 0.75rem; margin: 0.4rem 0 0.5rem; }
+.breakdown-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.breakdown-fill { height: 100%; background: var(--accent-dark); border-radius: 3px; transition: width 1s ease; }
+.breakdown-pct { font-size: 0.82rem; color: var(--text-muted); min-width: 36px; text-align: right; }
 
-.breakdown-bar-wrap {
+/* Pie chart */
+.pie-wrap { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.pie-canvas { flex-shrink: 0; }
+.pie-legend { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 160px; }
+.legend-row { display: flex; align-items: center; gap: 0.6rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { font-size: 0.82rem; color: var(--text-muted); flex: 1; }
+.legend-stat { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+
+/* Question review */
+.q-review-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.q-review-item {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.q-correct { border-color: rgba(111,207,151,0.25); }
+.q-incorrect { border-color: rgba(235,87,87,0.25); }
+
+.q-review-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin: 0.4rem 0 1rem;
+  width: 100%;
+  background: var(--surface);
+  border: none;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  color: var(--text);
+  transition: background 0.15s;
+  text-align: left;
 }
-.breakdown-bar {
-  flex: 1;
-  height: 6px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.breakdown-fill {
-  height: 100%;
-  background: var(--accent-dark);
-  border-radius: 3px;
-  transition: width 1s ease;
-}
-.breakdown-pct { font-size: 0.82rem; color: var(--text-muted); min-width: 36px; text-align: right; }
+.q-review-header:hover { background: var(--surface-hover); }
 
-.sub-stats { display: flex; gap: 0.75rem; font-size: 0.78rem; }
-.stat-correct { color: var(--success); }
-.stat-wrong { color: var(--danger); }
-.stat-omit { color: var(--text-dim); }
+.q-num-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.badge-correct { background: rgba(111,207,151,0.2); color: var(--success); }
+.badge-incorrect { background: rgba(235,87,87,0.2); color: var(--danger); }
 
-/* Performance band */
+.q-review-subtype { font-size: 0.82rem; color: var(--text-muted); flex: 1; }
+.q-review-result { font-size: 0.78rem; font-weight: 500; }
+.q-correct .q-review-result { color: var(--success); }
+.q-incorrect .q-review-result { color: var(--danger); }
+.q-review-chevron { font-size: 0.65rem; color: var(--text-dim); margin-left: 0.25rem; }
+
+.q-review-body {
+  padding: 1rem 1rem 1.1rem;
+  background: rgba(0,0,0,0.12);
+  border-top: 1px solid var(--border);
+}
+
+.q-review-prompt {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.q-review-choices { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.9rem; }
+
+.q-review-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+}
+.review-correct {
+  background: rgba(111,207,151,0.1);
+  border-color: rgba(111,207,151,0.3);
+}
+.review-wrong {
+  background: rgba(235,87,87,0.1);
+  border-color: rgba(235,87,87,0.3);
+}
+
+.review-tag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 0.15rem 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.correct-tag { background: rgba(111,207,151,0.2); color: var(--success); }
+.wrong-tag { background: rgba(235,87,87,0.2); color: var(--danger); }
+
+.q-review-explanation {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+/* Perf band */
 .perf-band {
   background: var(--accent-glow);
   border: 1px solid rgba(126,184,247,0.2);
@@ -135,11 +188,5 @@
   text-align: center;
   margin-bottom: 1.8rem;
 }
-.perf-label {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
-  color: var(--accent);
-  font-style: italic;
-}
-
+.perf-label { font-family: var(--font-serif); font-size: 0.95rem; color: var(--accent); font-style: italic; }
 .results-actions { display: flex; justify-content: center; }

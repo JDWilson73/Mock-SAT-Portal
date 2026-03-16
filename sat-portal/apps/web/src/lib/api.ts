@@ -1,4 +1,7 @@
-import type { AuthResponse, LoginPayload, RegisterPayload, Question, TestSession, StartSessionPayload, SubmitSessionPayload } from "@sat-portal/shared";
+import type {
+  AuthResponse, LoginPayload, RegisterPayload,
+  Question, TestSession, StartSessionPayload, SubmitSessionPayload
+} from "@sat-portal/shared";
 
 const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api`;
 const getToken = () => localStorage.getItem("accessToken");
@@ -31,6 +34,7 @@ export const api = {
   startSession: (body: StartSessionPayload) =>
     request<TestSession>("/sessions", { method: "POST", body: JSON.stringify(body) }),
   getSessions: () => request<TestSession[]>("/sessions"),
+  getSession: (id: string) => request<TestSession>(`/sessions/${id}`),
   submitSession: (id: string, body: SubmitSessionPayload) =>
     request<{ score: TestSession["score"] }>(`/sessions/${id}/submit`, { method: "POST", body: JSON.stringify(body) }),
 };

@@ -237,3 +237,91 @@
   font-size: 0.8rem;
   color: var(--text-dim);
 }
+
+/* ── Interstitial ─────────────────────────────────────────────────────────── */
+.interstitial-shell {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.interstitial-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2.2rem;
+  backdrop-filter: blur(12px);
+  text-align: center;
+  animation: fadeUp 0.35s ease both;
+}
+
+.interstitial-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--success);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.interstitial-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.interstitial-stat {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.9rem;
+}
+
+.interstitial-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  background: rgba(242,153,74,0.08);
+  border: 1px solid rgba(242,153,74,0.18);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+}
+
+.interstitial-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.8rem 0;
+}
+
+.interstitial-next {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.interstitial-next-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.6rem;
+}
+
+.btn-begin {
+  background: var(--accent-dark);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.72rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.18s, transform 0.1s;
+}
+.btn-begin:hover { background: #3a7ec7; }
+.btn-begin:active { transform: scale(0.98); }
