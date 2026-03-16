@@ -1,3 +1,6 @@
-// Vercel serverless entry point — forwards all /api/* requests to the Express app.
-// Vercel automatically handles the Node.js runtime for files in /api.
-export { default } from "../apps/api/src/index";
+import app from "../apps/api/src/index";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  return app(req, res);
+}
