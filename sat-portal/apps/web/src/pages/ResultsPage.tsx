@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
-import type { TestSession, SessionAnswer, Subtype } from "@sat-portal/shared";
+import type { TestSession, SessionAnswer } from "@sat-portal/shared";
 import "./results.css";
 
 const SUBTYPE_LABELS: Record<string, string> = {
@@ -17,6 +17,12 @@ const SUBTYPE_COLORS: Record<string, string> = {
   comprehension: "#56ccf2", grammar: "#f2c94c",
   vocabulary: "#eb5757", rhetoric: "#27ae60",
 };
+
+// Fixed order so the chart is always consistent
+const SUBTYPE_ORDER = [
+  "algebra", "geometry", "probability", "data_analysis",
+  "comprehension", "grammar", "vocabulary", "rhetoric",
+];
 
 export default function ResultsPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -38,7 +44,7 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!session?.answers || !canvasRef.current || animatedRef.current) return;
     animatedRef.current = true;
-    drawPieChart(canvasRef.current, session.answers);
+    drawRadarChart(canvasRef.current, session.answers as SessionAnswer[]);
   }, [session]);
 
   function toggleExpanded(id: string) {
@@ -68,6 +74,11 @@ export default function ResultsPage() {
     subtypeMap[st].total++;
     if (a.isCorrect) subtypeMap[st].correct++;
   }
+
+  // Find where R&W ends and Math begins for the separator
+  const rwMathBoundary = answers.findIndex(
+    (a, i) => i > 0 && a.question.section === "math" && answers[i - 1].question.section === "reading_writing"
+  );
 
   return (
     <div className="results-shell">
@@ -113,17 +124,19 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Pie chart */}
+        {/* Radial bar chart */}
         <div className="breakdown-section">
           <h2 className="breakdown-heading">Performance by subtype</h2>
           <div className="pie-wrap">
-            <canvas ref={canvasRef} width={220} height={220} className="pie-canvas" />
+            <canvas ref={canvasRef} width={240} height={240} className="pie-canvas" />
             <div className="pie-legend">
-              {Object.entries(subtypeMap).map(([st, { correct, total }]) => (
+              {SUBTYPE_ORDER.filter(st => subtypeMap[st]).map(st => (
                 <div key={st} className="legend-row">
-                  <span className="legend-dot" style={{ background: SUBTYPE_COLORS[st] ?? "#888" }} />
-                  <span className="legend-label">{SUBTYPE_LABELS[st] ?? st}</span>
-                  <span className="legend-stat">{correct}/{total}</span>
+                  <span className="legend-dot" style={{ background: SUBTYPE_COLORS[st] }} />
+                  <span className="legend-label">{SUBTYPE_LABELS[st]}</span>
+                  <span className="legend-stat">
+                    {subtypeMap[st].correct}/{subtypeMap[st].total}
+                  </span>
                 </div>
               ))}
             </div>
@@ -136,54 +149,66 @@ export default function ResultsPage() {
           <div className="q-review-list">
             {answers.map((a, i) => {
               const isOpen = expanded.has(a.id);
-              const correctChoice = a.question.choices.find(c => c.id === a.question.correctChoiceId);
+              const isFirstMath = i === rwMathBoundary;
               return (
-                <div key={a.id} className={`q-review-item ${a.isCorrect ? "q-correct" : "q-incorrect"}`}>
-                  <button
-                    className="q-review-header"
-                    onClick={() => toggleExpanded(a.id)}
-                  >
-                    <span className={`q-num-badge ${a.isCorrect ? "badge-correct" : "badge-incorrect"}`}>
-                      {i + 1}
-                    </span>
-                    <span className="q-review-subtype">
-                      {SUBTYPE_LABELS[a.question.subtype] ?? a.question.subtype}
-                    </span>
-                    <span className="q-review-result">
-                      {a.isCorrect ? "Correct ✓" : "Incorrect ✗"}
-                    </span>
-                    <span className="q-review-chevron">{isOpen ? "▲" : "▼"}</span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="q-review-body">
-                      <p className="q-review-prompt">{a.question.prompt}</p>
-                      <div className="q-review-choices">
-                        {a.question.choices.map(c => {
-                          const wasSelected = a.choiceId === c.id;
-                          const isCorrect = a.question.correctChoiceId === c.id;
-                          return (
-                            <div
-                              key={c.id}
-                              className={[
-                                "q-review-choice",
-                                isCorrect ? "review-correct" : "",
-                                wasSelected && !isCorrect ? "review-wrong" : "",
-                              ].join(" ")}
-                            >
-                              <span className="choice-label">{c.label}</span>
-                              <span className="choice-text">{c.text}</span>
-                              {isCorrect && <span className="review-tag correct-tag">Correct</span>}
-                              {wasSelected && !isCorrect && <span className="review-tag wrong-tag">Your answer</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {a.question.explanation && (
-                        <p className="q-review-explanation">{a.question.explanation}</p>
-                      )}
+                <div key={a.id}>
+                  {isFirstMath && (
+                    <div className="section-separator">
+                      <span className="section-separator-label">Math</span>
                     </div>
                   )}
+                  {i === 0 && (
+                    <div className="section-separator">
+                      <span className="section-separator-label">Reading &amp; Writing</span>
+                    </div>
+                  )}
+                  <div className={`q-review-item ${a.isCorrect ? "q-correct" : "q-incorrect"}`}>
+                    <button
+                      className="q-review-header"
+                      onClick={() => toggleExpanded(a.id)}
+                    >
+                      <span className={`q-num-badge ${a.isCorrect ? "badge-correct" : "badge-incorrect"}`}>
+                        {i + 1}
+                      </span>
+                      <span className="q-review-subtype">
+                        {SUBTYPE_LABELS[a.question.subtype] ?? a.question.subtype}
+                      </span>
+                      <span className="q-review-result">
+                        {a.isCorrect ? "Correct ✓" : "Incorrect ✗"}
+                      </span>
+                      <span className="q-review-chevron">{isOpen ? "▲" : "▼"}</span>
+                    </button>
+
+                    {isOpen && (
+                      <div className="q-review-body">
+                        <p className="q-review-prompt">{a.question.prompt}</p>
+                        <div className="q-review-choices">
+                          {a.question.choices.map(c => {
+                            const wasSelected = a.choiceId === c.id;
+                            const isCorrect = a.question.correctChoiceId === c.id;
+                            return (
+                              <div
+                                key={c.id}
+                                className={[
+                                  "q-review-choice",
+                                  isCorrect ? "review-correct" : "",
+                                  wasSelected && !isCorrect ? "review-wrong" : "",
+                                ].join(" ")}
+                              >
+                                <span className="choice-label">{c.label}</span>
+                                <span className="choice-text">{c.text}</span>
+                                {isCorrect && <span className="review-tag correct-tag">Correct</span>}
+                                {wasSelected && !isCorrect && <span className="review-tag wrong-tag">Your answer</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {a.question.explanation && (
+                          <p className="q-review-explanation">{a.question.explanation}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -202,10 +227,11 @@ export default function ResultsPage() {
   );
 }
 
-function drawPieChart(canvas: HTMLCanvasElement, answers: SessionAnswer[]) {
+function drawRadarChart(canvas: HTMLCanvasElement, answers: SessionAnswer[]) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
+  // Build subtype stats in fixed order
   const subtypeMap: Record<string, { correct: number; total: number }> = {};
   for (const a of answers) {
     const st = a.question.subtype as string;
@@ -214,74 +240,127 @@ function drawPieChart(canvas: HTMLCanvasElement, answers: SessionAnswer[]) {
     if (a.isCorrect) subtypeMap[st].correct++;
   }
 
-  const subtypes = Object.entries(subtypeMap);
-  const total = subtypes.length;
-  const cx = 110, cy = 110, r = 90, innerR = 48;
-  const sliceAngle = (2 * Math.PI) / total;
+  const subtypes = SUBTYPE_ORDER.filter(st => subtypeMap[st]);
+  const n = subtypes.length;
+  const cx = 120, cy = 120;
+  const maxR = 95;    // outer edge (100% correct)
+  const minR = 22;    // inner hub radius
+  const sliceAngle = (2 * Math.PI) / n;
 
-  // Animate fill
   let frame = 0;
-  const totalFrames = 60;
+  const totalFrames = 75;
 
   function draw(progress: number) {
     ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
-    subtypes.forEach(([st, { correct, total: stTotal }], i) => {
-      const startAngle = i * sliceAngle - Math.PI / 2;
-      const endAngle = startAngle + sliceAngle;
+    // ── Concentric guide rings ──────────────────────────────────────────────
+    const rings = [0.25, 0.5, 0.75, 1.0];
+    rings.forEach(ratio => {
+      ctx!.beginPath();
+      ctx!.arc(cx, cy, minR + (maxR - minR) * ratio, 0, 2 * Math.PI);
+      ctx!.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx!.lineWidth = 1;
+      ctx!.stroke();
+    });
+
+    // ── Spoke lines ─────────────────────────────────────────────────────────
+    subtypes.forEach((_, i) => {
+      const angle = i * sliceAngle - Math.PI / 2;
+      ctx!.beginPath();
+      ctx!.moveTo(cx + minR * Math.cos(angle), cy + minR * Math.sin(angle));
+      ctx!.lineTo(cx + maxR * Math.cos(angle), cy + maxR * Math.sin(angle));
+      ctx!.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx!.lineWidth = 1;
+      ctx!.stroke();
+    });
+
+    // ── Bars ────────────────────────────────────────────────────────────────
+    subtypes.forEach((st, i) => {
+      const { correct, total: stTotal } = subtypeMap[st];
       const pct = correct / stTotal;
       const color = SUBTYPE_COLORS[st] ?? "#888";
 
-      // Background slice (empty)
+      const startAngle = i * sliceAngle - Math.PI / 2;
+      const endAngle = startAngle + sliceAngle * 0.82; // slight gap between bars
+      const barR = minR + (maxR - minR) * pct * progress;
+
+      // Background wedge (full extent, dim)
       ctx!.beginPath();
-      ctx!.moveTo(cx, cy);
-      ctx!.arc(cx, cy, r, startAngle, endAngle);
+      ctx!.moveTo(cx + minR * Math.cos(startAngle), cy + minR * Math.sin(startAngle));
+      ctx!.arc(cx, cy, maxR, startAngle, endAngle);
+      ctx!.arc(cx, cy, minR, endAngle, startAngle, true);
       ctx!.closePath();
-      ctx!.fillStyle = color + "22";
+      ctx!.fillStyle = color + "18";
       ctx!.fill();
 
-      // Filled portion (animates from center outward, radially by pct)
-      const fillEnd = startAngle + sliceAngle * pct * progress;
-      if (fillEnd > startAngle) {
+      // Filled bar (grows outward from minR to barR)
+      if (barR > minR) {
         ctx!.beginPath();
-        ctx!.moveTo(cx, cy);
-        ctx!.arc(cx, cy, r, startAngle, fillEnd);
+        ctx!.moveTo(cx + minR * Math.cos(startAngle), cy + minR * Math.sin(startAngle));
+        ctx!.arc(cx, cy, barR, startAngle, endAngle);
+        ctx!.arc(cx, cy, minR, endAngle, startAngle, true);
         ctx!.closePath();
         ctx!.fillStyle = color;
-        ctx!.globalAlpha = 0.85;
+        ctx!.globalAlpha = 0.88;
         ctx!.fill();
         ctx!.globalAlpha = 1;
       }
 
-      // Slice separator
-      ctx!.beginPath();
-      ctx!.moveTo(cx, cy);
-      ctx!.lineTo(
-        cx + r * Math.cos(startAngle),
-        cy + r * Math.sin(startAngle)
-      );
-      ctx!.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx!.lineWidth = 1.5;
-      ctx!.stroke();
+      // Outer arc stroke on filled bar
+      if (barR > minR) {
+        ctx!.beginPath();
+        ctx!.arc(cx, cy, barR, startAngle, endAngle);
+        ctx!.strokeStyle = color;
+        ctx!.lineWidth = 1.5;
+        ctx!.globalAlpha = 0.6;
+        ctx!.stroke();
+        ctx!.globalAlpha = 1;
+      }
+
+      // Label at outer edge
+      const labelAngle = startAngle + (sliceAngle * 0.82) / 2;
+      const labelR = maxR + 14;
+      const lx = cx + labelR * Math.cos(labelAngle);
+      const ly = cy + labelR * Math.sin(labelAngle);
+      ctx!.textAlign = "center";
+      ctx!.textBaseline = "middle";
+      ctx!.fillStyle = "rgba(168,212,255,0.7)";
+      ctx!.font = "500 9.5px 'DM Sans', sans-serif";
+      // Abbreviate labels for space
+      const short: Record<string, string> = {
+        algebra: "Alg", geometry: "Geo", probability: "Prob",
+        data_analysis: "Data", comprehension: "Comp",
+        grammar: "Gram", vocabulary: "Vocab", rhetoric: "Rhet",
+      };
+      ctx!.fillText(short[st] ?? st, lx, ly);
     });
 
-    // Donut hole
+    // ── Center hub ──────────────────────────────────────────────────────────
     ctx!.beginPath();
-    ctx!.arc(cx, cy, innerR, 0, 2 * Math.PI);
-    ctx!.fillStyle = "#1a2f4e";
+    ctx!.arc(cx, cy, minR, 0, 2 * Math.PI);
+    ctx!.fillStyle = "#2a5298";
     ctx!.fill();
+    ctx!.beginPath();
+    ctx!.arc(cx, cy, minR, 0, 2 * Math.PI);
+    ctx!.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx!.lineWidth = 1;
+    ctx!.stroke();
 
-    // Center text
+    // Center % text
+    const overallPct = Math.round(
+      (answers.filter(a => a.isCorrect).length / answers.length) * 100
+    );
     ctx!.textAlign = "center";
-    ctx!.fillStyle = "#eef2f8";
-    ctx!.font = "600 18px Lora, serif";
-    ctx!.fillText(`${Math.round((answers.filter(a => a.isCorrect).length / answers.length) * 100)}%`, cx, cy + 6);
+    ctx!.textBaseline = "middle";
+    ctx!.fillStyle = "#f0f4ff";
+    ctx!.font = "600 13px 'Lora', serif";
+    ctx!.fillText(`${overallPct}%`, cx, cy);
   }
 
   function animate() {
     frame++;
     const progress = Math.min(frame / totalFrames, 1);
-    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
     draw(eased);
     if (frame < totalFrames) requestAnimationFrame(animate);
   }
@@ -291,7 +370,7 @@ function drawPieChart(canvas: HTMLCanvasElement, answers: SessionAnswer[]) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", year: "numeric"
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
   });
 }
 
