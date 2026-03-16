@@ -1,6 +1,6 @@
 import type { AuthResponse, LoginPayload, RegisterPayload, Question, TestSession, StartSessionPayload, SubmitSessionPayload } from "@sat-portal/shared";
 
-const BASE = "/api";
+const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api`;
 const getToken = () => localStorage.getItem("accessToken");
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

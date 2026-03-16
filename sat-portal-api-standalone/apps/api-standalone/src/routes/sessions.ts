@@ -2,14 +2,12 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthRequest } from "../middleware/auth";
-
 export const sessionsRouter = Router();
 sessionsRouter.use(requireAuth);
 const StartSchema = z.object({ section: z.enum(["math", "reading_writing", "full"]) });
 const SubmitSchema = z.object({
   answers: z.array(z.object({ questionId: z.string().uuid(), choiceId: z.string().uuid().nullable() })),
 });
-
 sessionsRouter.post("/", async (req: AuthRequest, res) => {
   const parsed = StartSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.message });
@@ -19,14 +17,12 @@ sessionsRouter.post("/", async (req: AuthRequest, res) => {
   });
   res.status(201).json(session);
 });
-
 sessionsRouter.get("/", async (req: AuthRequest, res) => {
   const sessions = await prisma.testSession.findMany({
     where: { userId: req.userId! }, orderBy: { startedAt: "desc" }, include: { score: true },
   });
   res.json(sessions);
 });
-
 sessionsRouter.post("/:id/submit", async (req: AuthRequest, res) => {
   const parsed = SubmitSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.message });
