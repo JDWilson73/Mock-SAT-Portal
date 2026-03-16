@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-build": "cd ../../packages/shared && npm install && npm run build && cd ../../apps/web && npm run build",
+    "build:vercel": "tsc && vite build --base=/"
   },
   "dependencies": {
     "@sat-portal/shared": "*",
