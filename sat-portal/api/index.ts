@@ -36,7 +36,7 @@ function requireAuth(req: any, res: any, next: any) {
   }
 }
 
-app.post("/api/auth/register", async (req, res) => {
+app.post("/auth/register", async (req, res) => {
   const Schema = z.object({ email: z.string().email(), password: z.string().min(8), name: z.string().min(1) });
   const parsed = Schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.message });
@@ -48,7 +48,7 @@ app.post("/api/auth/register", async (req, res) => {
   res.status(201).json({ user: { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt }, ...signTokens(user.id) });
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/auth/login", async (req, res) => {
   const Schema = z.object({ email: z.string().email(), password: z.string() });
   const parsed = Schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.message });
@@ -58,7 +58,7 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ user: { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt }, ...signTokens(user.id) });
 });
 
-app.post("/api/auth/refresh", (req, res) => {
+app.post("/auth/refresh", (req, res) => {
   const { refreshToken } = req.body as { refreshToken?: string };
   if (!refreshToken) return res.status(400).json({ message: "Refresh token required" });
   try {
@@ -70,7 +70,7 @@ app.post("/api/auth/refresh", (req, res) => {
 });
 
 // ── Questions ─────────────────────────────────────────────────────────────────
-app.get("/api/questions", requireAuth, async (req: any, res) => {
+app.get("/questions", requireAuth, async (req: any, res) => {
   const { section, difficulty, limit } = req.query as Record<string, string>;
   const questions = await prisma.question.findMany({
     where: { ...(section && { section }), ...(difficulty && { difficulty }) },
@@ -82,7 +82,7 @@ app.get("/api/questions", requireAuth, async (req: any, res) => {
 });
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
-app.post("/api/sessions", requireAuth, async (req: any, res) => {
+app.post("/sessions", requireAuth, async (req: any, res) => {
   const Schema = z.object({ section: z.enum(["math", "reading_writing", "full"]) });
   const parsed = Schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.message });
@@ -93,7 +93,7 @@ app.post("/api/sessions", requireAuth, async (req: any, res) => {
   res.status(201).json(session);
 });
 
-app.get("/api/sessions", requireAuth, async (req: any, res) => {
+app.get("/sessions", requireAuth, async (req: any, res) => {
   const sessions = await prisma.testSession.findMany({
     where: { userId: req.userId },
     orderBy: { startedAt: "desc" },
@@ -102,7 +102,7 @@ app.get("/api/sessions", requireAuth, async (req: any, res) => {
   res.json(sessions);
 });
 
-app.post("/api/sessions/:id/submit", requireAuth, async (req: any, res) => {
+app.post("/sessions/:id/submit", requireAuth, async (req: any, res) => {
   const Schema = z.object({
     answers: z.array(z.object({ questionId: z.string().uuid(), choiceId: z.string().uuid().nullable() })),
   });
@@ -128,6 +128,6 @@ app.post("/api/sessions/:id/submit", requireAuth, async (req: any, res) => {
   res.json({ score });
 });
 
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.get("/health", (_req, res) => res.json({ ok: true }));
 
 export default app;
