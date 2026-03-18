@@ -73,6 +73,10 @@ sessionsRouter.get("/:id", async (req: AuthRequest, res) => {
           question: { include: { choices: true } },
           choice: true,
         },
+        orderBy: [
+          { question: { section: "asc" } },
+          { question: { subtype: "asc" } },
+        ],
       },
     },
   });
@@ -128,14 +132,20 @@ sessionsRouter.get("/:id/questions", async (req: AuthRequest, res) => {
     : ([session.section] as const);
 
   const questionSets = await Promise.all(
-    sections.map(sec =>
-      prisma.question.findMany({
+    sections.map(async sec => {
+      const count = QUESTION_COUNTS[sec as "reading_writing" | "math"][length];
+      // Fetch more than needed, then randomly sample
+      const all = await prisma.question.findMany({
         where: { section: sec },
         include: { choices: true },
-        take: QUESTION_COUNTS[sec as "reading_writing" | "math"][length],
-        orderBy: { createdAt: "asc" },
-      })
-    )
+      });
+      // Fisher-Yates shuffle then take the required count
+      for (let i = all.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [all[i], all[j]] = [all[j], all[i]];
+      }
+      return all.slice(0, count);
+    })
   );
 
   const all = questionSets.flat().map(({ correctChoiceId: _, ...q }) => q);

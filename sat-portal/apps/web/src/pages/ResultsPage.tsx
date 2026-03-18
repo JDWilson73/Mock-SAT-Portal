@@ -75,10 +75,14 @@ export default function ResultsPage() {
     if (a.isCorrect) subtypeMap[st].correct++;
   }
 
-  // Find where R&W ends and Math begins for the separator
-  const rwMathBoundary = answers.findIndex(
-    (a, i) => i > 0 && a.question.section === "math" && answers[i - 1].question.section === "reading_writing"
-  );
+// Sort answers so R&W always precedes Math, stable within each section
+  const sortedAnswers = [...answers].sort((a, b) => {
+    if (a.question.section === b.question.section) return 0;
+    return a.question.section === "reading_writing" ? -1 : 1;
+  });
+
+  // Find where R&W ends and Math begins
+  const rwMathBoundary = sortedAnswers.findIndex(a => a.question.section === "math");
 
   return (
     <div className="results-shell" role="main">
@@ -147,7 +151,7 @@ export default function ResultsPage() {
         <div className="breakdown-section">
           <h2 className="breakdown-heading">Question review</h2>
           <div className="q-review-list" role="list" aria-label="Question review">
-            {answers.map((a, i) => {
+            {sortedAnswers.map((a, i) => {
               const isOpen = expanded.has(a.id);
               const isFirstMath = i === rwMathBoundary;
               return (
