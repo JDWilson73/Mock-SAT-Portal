@@ -81,17 +81,17 @@ export default function ResultsPage() {
   );
 
   return (
-    <div className="results-shell">
-      <div className="results-card">
+    <div className="results-shell" role="main">
+      <div className="results-card" role="region" aria-labelledby="results-title">
         <div className="results-header">
           <span className="results-eyebrow">Test complete</span>
-          <h1 className="results-title">Your results</h1>
+          <h1 className="results-title" id="results-title">Your results</h1>
           <p className="results-date">{fmtDate(session.startedAt)}</p>
         </div>
 
         {/* Score dial */}
         <div className="score-dial-wrap">
-          <svg className="score-dial" viewBox="0 0 200 120">
+          <svg className="score-dial" viewBox="0 0 200 120" role="img" aria-label={`SAT scaled score: ${scaled} out of 1600`}>
             <path d="M20 110 A 90 90 0 0 1 180 110" fill="none"
               stroke="rgba(255,255,255,0.08)" strokeWidth="10" strokeLinecap="round"/>
             <path d="M20 110 A 90 90 0 0 1 180 110" fill="none"
@@ -128,7 +128,7 @@ export default function ResultsPage() {
         <div className="breakdown-section">
           <h2 className="breakdown-heading">Performance by subtype</h2>
           <div className="pie-wrap">
-            <canvas ref={canvasRef} width={240} height={240} className="pie-canvas" />
+            <canvas ref={canvasRef} width={240} height={240} className="pie-canvas" role="img" aria-label="Radial bar chart showing performance percentage per question subtype" />
             <div className="pie-legend">
               {SUBTYPE_ORDER.filter(st => subtypeMap[st]).map(st => (
                 <div key={st} className="legend-row">
@@ -146,7 +146,7 @@ export default function ResultsPage() {
         {/* Question-by-question list */}
         <div className="breakdown-section">
           <h2 className="breakdown-heading">Question review</h2>
-          <div className="q-review-list">
+          <div className="q-review-list" role="list" aria-label="Question review">
             {answers.map((a, i) => {
               const isOpen = expanded.has(a.id);
               const isFirstMath = i === rwMathBoundary;
@@ -162,9 +162,9 @@ export default function ResultsPage() {
                       <span className="section-separator-label">Reading &amp; Writing</span>
                     </div>
                   )}
-                  <div className={`q-review-item ${a.isCorrect ? "q-correct" : "q-incorrect"}`}>
+                  <div className={`q-review-item ${a.isCorrect ? "q-correct" : "q-incorrect"}`} role="listitem">
                     <button
-                      className="q-review-header"
+                      className="q-review-header" aria-expanded={isOpen} aria-controls={`review-body-${a.id}`}
                       onClick={() => toggleExpanded(a.id)}
                     >
                       <span className={`q-num-badge ${a.isCorrect ? "badge-correct" : "badge-incorrect"}`}>
@@ -180,7 +180,7 @@ export default function ResultsPage() {
                     </button>
 
                     {isOpen && (
-                      <div className="q-review-body">
+                      <div className="q-review-body" id={`review-body-${a.id}`}>
                         <p className="q-review-prompt">{a.question.prompt}</p>
                         <div className="q-review-choices">
                           {a.question.choices.map(c => {

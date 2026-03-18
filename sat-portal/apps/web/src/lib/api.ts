@@ -35,6 +35,9 @@ export const api = {
     request<TestSession>("/sessions", { method: "POST", body: JSON.stringify(body) }),
   getSessions: () => request<TestSession[]>("/sessions"),
   getSession: (id: string) => request<TestSession>(`/sessions/${id}`),
+  getSessionQuestions: (id: string) => request<Question[]>(`/sessions/${id}/questions`),
   submitSession: (id: string, body: SubmitSessionPayload) =>
-    request<{ score: TestSession["score"] }>(`/sessions/${id}/submit`, { method: "POST", body: JSON.stringify(body) }),
+    request<{ score: TestSession["score"] }>(`/sessions/${id}/submit`, {
+      method: "POST", body: JSON.stringify(body),
+    }),
 };

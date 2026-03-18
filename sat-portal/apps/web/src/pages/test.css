@@ -325,3 +325,37 @@
 }
 .btn-begin:hover { background: #3a7ec7; }
 .btn-begin:active { transform: scale(0.98); }
+
+/* ── Timer hide/show ──────────────────────────────────────────────────────── */
+.timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.t-timer-hidden {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.btn-timer-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.18rem 0.5rem;
+  font-family: var(--font-sans);
+  transition: border-color 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.btn-timer-toggle:hover { border-color: var(--border-strong); color: var(--text); }
+.btn-timer-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

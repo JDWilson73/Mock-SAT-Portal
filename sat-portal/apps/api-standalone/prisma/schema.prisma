@@ -39,16 +39,19 @@ model Choice {
 }
 
 model TestSession {
-  id               String          @id @default(uuid())
-  userId           String
-  section          String
-  status           String          @default("in_progress")
-  timeLimitSeconds Int
-  startedAt        DateTime        @default(now())
-  completedAt      DateTime?
-  user             User            @relation(fields: [userId], references: [id])
-  answers          SessionAnswer[]
-  score            Score?
+  id                   String          @id @default(uuid())
+  userId               String
+  section              String
+  testLength           String          @default("full")
+  status               String          @default("in_progress")
+  timeLimitSeconds     Int
+  rwTimeLimitSeconds   Int             @default(3840)
+  mathTimeLimitSeconds Int             @default(4200)
+  startedAt            DateTime        @default(now())
+  completedAt          DateTime?
+  user                 User            @relation(fields: [userId], references: [id])
+  answers              SessionAnswer[]
+  score                Score?
 }
 
 model SessionAnswer {
