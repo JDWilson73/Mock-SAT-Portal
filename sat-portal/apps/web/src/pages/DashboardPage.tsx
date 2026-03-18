@@ -68,6 +68,11 @@ export default function DashboardPage() {
     }
   }
 
+  async function logoutRedirect() {
+    await logout();
+    navigate('/login');
+  }
+
   const completed = sessions.filter(s => s.status === "completed");
   const best = completed.reduce<number | null>((acc, s) => {
     const sc = (s.score as any)?.scaledScore;
@@ -90,7 +95,7 @@ export default function DashboardPage() {
             Good {getTimeOfDay()}, {user?.name.split(" ")[0]}.
           </h1>
         </div>
-        <button className="btn-ghost" onClick={logout} aria-label="Sign out of your account">
+        <button className="btn-ghost" onClick={logoutRedirect} aria-label="Sign out of your account">
           Sign out
         </button>
       </header>
