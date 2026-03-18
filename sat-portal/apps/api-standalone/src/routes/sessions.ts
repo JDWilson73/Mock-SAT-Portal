@@ -2,7 +2,15 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthRequest } from "../middleware/auth";
-import { QUESTION_COUNTS, SECTION_TIMES } from "@sat-portal/shared";
+const QUESTION_COUNTS = {
+  reading_writing: { full: 54, half: 27, quarter: 14 },
+  math:            { full: 44, half: 22, quarter: 11 },
+} as const;
+
+const SECTION_TIMES = {
+  reading_writing: { full: 64 * 60, half: 32 * 60, quarter: 16 * 60 },
+  math:            { full: 70 * 60, half: 35 * 60, quarter: 18 * 60 },
+} as const;
 
 export const sessionsRouter = Router();
 sessionsRouter.use(requireAuth);
